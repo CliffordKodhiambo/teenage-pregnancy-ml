@@ -1,0 +1,147 @@
+"""
+diagnose_raw_data.py
+
+PURPOSE
+-------
+Diagnostic check on the raw KDHS data export (KENR8CFL.xlsx) to confirm
+whether the file is structured as ONE ROW PER WOMAN (what this project
+needs) or ONE ROW PER PREGNANCY/BIRTH EVENT (which would make the file
+unusable for our purpose).
+
+WHY THIS MATTERS
+----------------
+This project needs to classify girls (15-19) into "ever pregnant" vs.
+"never pregnant". That requires a dataset where EVERY interviewed woman
+appears exactly once, regardless of her pregnancy history - i.e. the
+DHS "Individual Recode" (IR) file.
+
+If the file instead has multiple rows per woman (one row per pregnancy),
+women who have NEVER been pregnant will be almost entirely absent from
+it, and the model will have no "negative class" (never-pregnant cases)
+to learn from - making risk prediction impossible.
+
+This script checks for exactly that problem and prints a plain-English
+verdict at the end, which can be quoted directly when requesting the
+correct file from the DHS Program.
+
+USAGE
+-----
+Run from the project root, with the venv activated:
+    python src/diagnose_raw_data.py
+"""
+
+import pandas as pd
+from pathlib import Path
+
+# ---------------------------------------------------------------------
+# 1. Locate and load the raw file
+# ---------------------------------------------------------------------
+# NOTE: raw data must never be committed to Git (see .gitignore) - this
+# script only reads it locally from your machine.
+RAW_FILE = Path("data/raw/KENR8CFL.xlsx")
+
+if not RAW_FILE.exists():
+    raise FileNotFoundError(
+        f"Could not find {RAW_FILE}. Make sure the raw KDHS export is "
+        "saved at this exact path before running this script."
+    )
+
+# The 'Rawdata' sheet has 2 header rows before the actual data starts:
+#   row 1 = DHS variable codes    (e.g. 'V012', 'V201', ...)
+#   row 2 = human-readable labels (e.g. "Respondent's current age")
+#   row 3 onwards = actual data
+# So: use row 1 as the column names, and skip row 2 (the labels row).
+df = pd.read_excel(
+    RAW_FILE,
+    sheet_name="Rawdata",
+    header=0,       # use the first row as column names (the V-codes)
+    skiprows=[1],   # skip the second row (text labels) but keep the data after it
+)
+
+print(f"Loaded {len(df):,} rows and {df.shape[1]} columns from the 'Rawdata' sheet.\n")
+
+# ---------------------------------------------------------------------
+# 2. Check: one row per woman, or one row per pregnancy?
+# ---------------------------------------------------------------------
+n_rows = len(df)
+n_unique_women = df["CASEID"].nunique()
+
+print("=== STRUCTURE CHECK ===")
+print(f"Total rows in file:        {n_rows:,}")
+print(f"Unique women (CASEID):     {n_unique_women:,}")
+print(f"Extra rows beyond 1/woman: {n_rows - n_unique_women:,}\n")
+
+if n_rows > n_unique_women:
+    print(
+        "FLAG: some women appear on more than one row. This is a sign the "
+        "file may be structured per-pregnancy rather than per-woman.\n"
+    )
+
+# PIDX = "Pregnancy column number". If this column exists and takes
+# values like 1, 2, 3 (not just a single constant value), it confirms
+# the file is tracking individual pregnancies/births as separate rows.
+if "PIDX" in df.columns:
+    print("=== PIDX ('pregnancy column number') VALUE COUNTS ===")
+    print(df["PIDX"].value_counts(dropna=False).sort_index())
+    print()
+
+# ---------------------------------------------------------------------
+# 3. Check: are "never pregnant" women actually present in the file?
+# ---------------------------------------------------------------------
+# V201 = "Total children ever born". In any general-population survey,
+# a large share of women - especially teens - should show 0 here.
+# If almost nobody shows 0, it strongly suggests women who were never
+# pregnant were dropped from this export entirely.
+never_had_children = df[df["V201"].fillna(0) == 0]
+pct_never = 100 * len(never_had_children) / n_rows
+
+print("=== 'NEVER PREGNANT' PRESENCE CHECK (all women) ===")
+print(
+    f"Rows with V201 == 0 (no children ever born): {len(never_had_children):,} "
+    f"({pct_never:.1f}% of all rows)"
+)
+print(
+    f"Unique women among those:                     "
+    f"{never_had_children['CASEID'].nunique():,}\n"
+)
+
+# ---------------------------------------------------------------------
+# 4. Same check, restricted to our actual target group: girls 15-19
+# ---------------------------------------------------------------------
+teens = df[(df["V012"] >= 15) & (df["V012"] <= 19)]
+teens_never = teens[teens["V201"].fillna(0) == 0]
+pct_teens_never = 100 * len(teens_never) / len(teens) if len(teens) else 0
+
+print("=== SAME CHECK, RESTRICTED TO GIRLS AGED 15-19 ===")
+print(f"Total teen rows:                     {len(teens):,}")
+print(f"Unique teen women:                   {teens['CASEID'].nunique():,}")
+print(
+    f"Teen rows with 0 children ever born: {len(teens_never):,} "
+    f"({pct_teens_never:.1f}%)\n"
+)
+
+# ---------------------------------------------------------------------
+# 5. Plain-English verdict
+# ---------------------------------------------------------------------
+print("=== VERDICT ===")
+if pct_never < 20:
+    print(
+        "This file almost certainly does NOT include the full population of "
+        "interviewed women. Women who have never been pregnant appear to be "
+        "missing or severely under-represented.\n\n"
+        "This matches the pattern of a DHS 'Births Recode' (BR) or pregnancy-"
+        "history export, where one row exists per PREGNANCY, not per woman.\n\n"
+        "ACTION NEEDED: request the DHS 'Individual Recode' (IR) file instead "
+        "(its filename usually starts with the country/phase code plus 'IR', "
+        "e.g. KEIR8x). The IR file has exactly one row per interviewed woman, "
+        "regardless of pregnancy history - this is required to build a "
+        "pregnancy-risk classifier that has both positive (ever pregnant) and "
+        "negative (never pregnant) cases to learn from."
+    )
+else:
+    print(
+        "Never-pregnant women appear reasonably well represented in this "
+        "file. This looks consistent with a per-woman (IR-type) structure. "
+        "Still worth double-checking against the official DHS recode manual "
+        "before proceeding."
+    )
