@@ -34,6 +34,7 @@ file, obtained via the DHS Program. Raw data is not committed to this
 repository (see `.gitignore`) due to data usage restrictions.
 
 ## Project Structure
+'''
 data/raw/ - original, untouched data (not tracked in git)
 data/processed/ - cleaned, analysis-ready data
 notebooks/ - exploratory analysis (Jupyter)
@@ -42,6 +43,8 @@ outputs/models/ - saved trained models
 outputs/figures/ - saved charts and plots
 dashboard/ - Streamlit dashboard prototype
 NOTES.md - running log of key decisions and findings
+'''
+
 
 ## Status
 🚧 In progress. Currently in Phase 1 (data preparation).
