@@ -4,7 +4,7 @@ A running log of key decisions, findings, and open questions during this project
 
 ---
 
-## 2026-07-31 — Raw data structure issue identified
+## 2026-07-31 - Raw data structure issue identified
 
 - Received `KENR8CFL.xlsx` as the raw KDHS dataset.
 - Ran `src/diagnose_raw_data.py` to validate structure before cleaning.
@@ -20,6 +20,22 @@ A running log of key decisions, findings, and open questions during this project
   variable dictionary (Sheet1), does not exist in this export.
 - **Decision:** request the DHS Individual Recode (IR) file instead
   (one row per interviewed woman, all pregnancy statuses included).
+
+## 2026-08-04 - Second raw file also unsuitable
+
+- Received KEGR8CFL.xlsx as a second candidate raw file.
+- Same structural issue as KENR8CFL.xlsx, at larger scale: 82,687 rows,
+  only 23,601 unique women, PIDX values exceeding 10 (one row per birth
+  event). Only 0.42% of rows (4.9% of teen rows) show zero children ever
+  born.
+- Checked DHS's official file-naming documentation: valid DHS dataset-type
+  codes are HR, PR, IR, MR, CR, BR, KR only. "NR" and "GR" are not
+  official DHS codes - both files provided appear to be non-standard,
+  flattened exports of the birth-history section.
+- Confirmed requirement: need the actual Individual Recode (IR) file,
+  filename pattern KEIR8xFL - one row per woman, birth history stored as
+  wide columns, not repeated rows.
+- Still pending: request correct file from DHS Program.
 
 ## [next entry template]
 
