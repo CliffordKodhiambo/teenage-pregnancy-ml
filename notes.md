@@ -37,11 +37,11 @@ A running log of key decisions, findings, and open questions during this project
   wide columns, not repeated rows.
 - Still pending: request correct file from DHS Program.
 
-## 05/08/26 - Attempting deduplication
-Figured that perhaps the existence of duplicate PIDX values is what's causing (or at least significantly contributing) to the imbalance of pregnant against never-pregnant. 
+## 05/08/26 - Attempting deduplication fix
+Thought to self that perhaps the existence of duplicate PIDX values is what's causing (or at least significantly contributing) to the imbalance of pregnant against never-pregnant. 
 Writing the code...
 
-## 2026-08-05 — Tested deduplication as a possible fix
+## Tested deduplication as a possible fix
 
 - Hypothesis: collapsing repeated PIDX (birth-history) rows into one row
   per woman might resolve the missing never-pregnant-girls problem.
