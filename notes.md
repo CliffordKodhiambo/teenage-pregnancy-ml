@@ -4,7 +4,7 @@ A running log of key decisions, findings, and open questions during this project
 
 ---
 
-## 2026-07-31 - Raw data structure issue identified
+## 31/07/26 - Raw data structure issue identified
 
 - Received `KENR8CFL.xlsx` as the raw KDHS dataset.
 - Ran `src/diagnose_raw_data.py` to validate structure before cleaning.
@@ -21,7 +21,7 @@ A running log of key decisions, findings, and open questions during this project
 - **Decision:** request the DHS Individual Recode (IR) file instead
   (one row per interviewed woman, all pregnancy statuses included).
 
-## 2026-08-04 - Second raw file also unsuitable
+## 04/08/26 - Second raw file also unsuitable
 
 - Received KEGR8CFL.xlsx as a second candidate raw file.
 - Same structural issue as KENR8CFL.xlsx, at larger scale: 82,687 rows,
@@ -37,10 +37,9 @@ A running log of key decisions, findings, and open questions during this project
   wide columns, not repeated rows.
 - Still pending: request correct file from DHS Program.
 
-## [next entry template]
 
-## YYYY-MM-DD — [short title]
+## Attempting Deduplication
 
-- What happened / what was checked
-- What was found
-- What was decided, and why
+## 05/08/26 - Attempting deduplication
+Figured that perhaps the existence of duplicate PIDX values is what's causing (or at least significantly contributing) to the imbalance of pregnant against never-pregnant. 
+Writing the code...
