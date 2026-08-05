@@ -37,9 +37,19 @@ A running log of key decisions, findings, and open questions during this project
   wide columns, not repeated rows.
 - Still pending: request correct file from DHS Program.
 
-
-## Attempting Deduplication
-
 ## 05/08/26 - Attempting deduplication
 Figured that perhaps the existence of duplicate PIDX values is what's causing (or at least significantly contributing) to the imbalance of pregnant against never-pregnant. 
 Writing the code...
+
+## 2026-08-05 — Tested deduplication as a possible fix
+
+- Hypothesis: collapsing repeated PIDX (birth-history) rows into one row
+  per woman might resolve the missing never-pregnant-girls problem.
+- Wrote src/check_deduplication.py to test this directly on KENR8CFL.xlsx.
+- Result: never-pregnant share among teens was 5.2% before deduplication,
+  4.6% after - essentially unchanged.
+- Conclusion: deduplication only removes EXTRA rows for women who already
+  appear in the file; it cannot create rows for women who were never
+  included in the export at all. The missing negative class is a data
+  availability problem, not a duplication problem.
+- Still need: the DHS Individual Recode (IR) file (KEIR8xFL).
