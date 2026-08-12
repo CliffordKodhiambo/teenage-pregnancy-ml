@@ -54,6 +54,15 @@ Writing the code...
   availability problem, not a duplication problem.
 - Still need: the DHS Individual Recode (IR) file (KEIR8xFL).
 
+Performed deduplication (does not resolve core issue)
+
+- Wrote and ran src/deduplicate_data.py on KENR8CFL.xlsx. Yet to be committed because computer still running the code.
+- Result: 13,184 rows -> 11,195 rows (1,989 duplicate birth-history rows removed), now exactly one row per woman.
+- Output saved to data/processed/KENR8CFL_removed_duplications.xlsx. NOT committed to git - still individual-level KDHS data, restricted
+  under DHS data usage terms even after deduplication.
+- As established in check_deduplication.py: this does not resolve the missing never-pregnant-girls problem. The correct IR file is still
+  required before modelling can proceed.
+
 
 ## 12/08/26 — Correct dataset obtained and validated
 
