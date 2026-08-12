@@ -53,3 +53,24 @@ Writing the code...
   included in the export at all. The missing negative class is a data
   availability problem, not a duplication problem.
 - Still need: the DHS Individual Recode (IR) file (KEIR8xFL).
+
+
+## 12/08/26 — Correct dataset obtained and validated
+
+- Received the DHS document guide listing all available Kenya DHS-8
+  recode files. Identified keir8cdt.zip (Individual Recode, Stata
+  format) as the correct file - confirmed KENR8CFL and KEGR8CFL were
+  actually "Pregnancy and Postnatal Care Recode" and "Pregnancies
+  Recode," not the general women's file.
+- Extracted keir8cfl.dta and loaded it directly with pandas.read_stata()
+  - no dictionary file needed, since .dta is self-describing.
+- Validated: 32,156 rows, 32,156 unique women (one row per woman,
+  confirmed). 6,404 girls aged 15-19. 86.9% of teens show zero children
+  ever born, consistent with known population patterns.
+- Derived ever_pregnant target (V201>0 or V213==1 or V228==1): 15.8%
+  of teens, consistent with published national statistics.
+- Samburu: 114 teen respondents, Nyeri: 76 - workable sample for county
+  comparison.
+- All required predictor variables confirmed present.
+- Closed GitHub issue on missing negative class.
+- Data issue fully resolved. Proceeding to Phase 1 (data preparation).
