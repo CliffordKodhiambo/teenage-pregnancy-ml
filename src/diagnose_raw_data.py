@@ -38,13 +38,13 @@ from pathlib import Path
 # ---------------------------------------------------------------------
 # NOTE: raw data must never be committed to Git (see .gitignore) - this
 # script only reads it locally from your machine.
-RAW_FILE = Path("data/raw/KENR8CFL.xlsx")
+RAW_FILE = Path(r"data/raw/KENR8CFL.xlsx")
 
 if not RAW_FILE.exists():
     raise FileNotFoundError(
         f"Could not find {RAW_FILE}. Make sure the raw KDHS export is "
         "saved at this exact path before running this script."
-    )
+    ) 
 
 # The 'Rawdata' sheet has 2 header rows before the actual data starts:
 #   row 1 = DHS variable codes    (e.g. 'V012', 'V201', ...)
