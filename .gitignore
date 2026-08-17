@@ -5,6 +5,9 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 
+presentation/*.xlsx
+!presentation/.gitkeep
+
 # python
 venv/
 __pycache__/
