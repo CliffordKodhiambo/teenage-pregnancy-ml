@@ -64,6 +64,7 @@ Performed deduplication (does not resolve core issue)
   required before modelling can proceed.
 
 
+
 ## 12/08/26 — Correct dataset obtained and validated
 
 - Received the DHS document guide listing all available Kenya DHS-8
@@ -83,3 +84,18 @@ Performed deduplication (does not resolve core issue)
 - All required predictor variables confirmed present.
 - Closed GitHub issue on missing negative class.
 - Data issue fully resolved. Proceeding to Phase 1 (data preparation).
+
+
+## 17/08/26 — Phase 1 and Phase 2 completed
+
+- Implemented src/build_analysis_dataset.py: filters keir8cfl.dta to 6,404 girls aged 15-19, builds ever_pregnant target from V201/V213/V228, recodes V525 special codes (0 = never had sex, 49 = inconsistent response) into a separate ever_had_sex flag plus clean numeric age, narrows to ~18 relevant columns. Output: data/processed/analysis_dataset.csv.
+- Implemented src/feature_engineering.py: encodes analysis_dataset.csv into model-ready features - ordinal education/wealth, binary urban/ rural, one-hot marital status, 3-level media exposure category (No/Yes/Not administered), binary contraceptive knowledge flag. Produces stratified 80/20 train/test split. Output: data/processed/train.csv, data/processed/test.csv.
+- Media exposure variables (V384a/b/c) confirmed ~48% missing, consistent with a DHS half-sample question design rather than a data quality issue - treated as a distinct "Not administered" category rather than imputed or dropped.
+
+## 17/08/26 — Clarified relationship between dataset files
+
+- Documented how each processed file relates to the original source (keir8cfl.dta, 32,156 women, 5,925 columns):
+  - build_analysis_dataset.py -> analysis_dataset.csv: cleaned but not yet encoded for modelling.
+  - feature_engineering.py -> train.csv / test.csv: encoded, model-ready features. These two files are what actually feed the models.
+  - generate_demo_workbook.py -> presentation/Raw_and_Cleaned_Full_Dataset.xlsx: a separate, standalone for oral presentation purposes only, not part of the pipeline. Re-applies the same cleaning logic manually against keir8cfl.dta directly. Must be re-run manually if the pipeline scripts' cleaning logic changes.
+- Added src/generate_demo_workbook.py to the repo.
