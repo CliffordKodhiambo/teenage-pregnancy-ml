@@ -99,3 +99,11 @@ Performed deduplication (does not resolve core issue)
   - feature_engineering.py -> train.csv / test.csv: encoded, model-ready features. These two files are what actually feed the models.
   - generate_demo_workbook.py -> presentation/Raw_and_Cleaned_Full_Dataset.xlsx: a separate, standalone for oral presentation purposes only, not part of the pipeline. Re-applies the same cleaning logic manually against keir8cfl.dta directly. Must be re-run manually if the pipeline scripts' cleaning logic changes.
 - Added src/generate_demo_workbook.py to the repo.
+
+## 17/08/26 — Phase 3 completed: model training and comparison
+
+- Implemented src/train_models.py: trained logistic regression, random forest, XGBoost, and an Explainable Boosting Machine on train.csv, with 5-fold stratified cross-validation and class imbalance handled via class weighting (sklearn models) / scale_pos_weight (XGBoost).
+- Evaluated all four on the held-out test.csv using F1, precision, recall, ROC-AUC, and PR-AUC (PR-AUC prioritized over ROC-AUC given the imbalanced target, ~15.8% positive rate).
+- Results: EBM performed best on both ROC-AUC (0.958) and PR-AUC (0.789), consistent with the proposal's stated preference for interpretability-first models. XGBoost close behind (PR-AUC 0.763). Logistic regression's recall of 1.0 at default threshold is a class-balancing artifact, not a genuinely strong result.
+- Identified a methodological issue worth addressing before final write-up: ever_had_sex is one of the strongest predictors, but this is close to tautological (girls who have never had sex are almost definitionally in the "never pregnant" group), not a genuine risk insight. Plan to also report a model restricted to the sexually active subgroup, since that is the more policy-relevant question for county health officers.
+- Saved trained models to outputs/models/ (logistic_regression.joblib, random_forest.joblib, xgboost.joblib, ebm.joblib) and comparison table to outputs/model_comparison.csv.
