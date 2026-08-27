@@ -1,7 +1,9 @@
 # train_models.py
 # Phase 3: trains logistic regression, random forest, XGBoost, and an
 # Explainable Boosting Machine, with 5-fold CV on train.csv and a final
-# evaluation on test.csv. Saves trained models to outputs/models/.
+# evaluation on test.csv. Saves trained models to outputs/models/, and
+# saves the exact feature matrices used so explainability.py (Phase 4)
+# can load them directly.
 
 import pandas as pd
 import numpy as np
@@ -13,7 +15,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, cross_validate
 from sklearn.metrics import (
     f1_score, precision_score, recall_score, roc_auc_score,
-    average_precision_score, classification_report,
+    average_precision_score,
 )
 from xgboost import XGBClassifier
 from interpret.glassbox import ExplainableBoostingClassifier
@@ -26,7 +28,6 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)
 train_df = pd.read_csv(TRAIN_FILE)
 test_df = pd.read_csv(TEST_FILE)
 
-# Columns that are IDs / survey design variables, not model features
 non_feature_cols = ["caseid", "v005", "v021", "v023", "ever_pregnant"]
 feature_cols = [c for c in train_df.columns if c not in non_feature_cols]
 
@@ -35,13 +36,12 @@ y_train = train_df["ever_pregnant"]
 X_test = test_df[feature_cols]
 y_test = test_df["ever_pregnant"]
 
-# Simple median imputation for the few remaining numeric gaps
-# (age_at_first_sex is NaN for girls who never had sex - median-fill
-# for model compatibility; ever_had_sex already flags this separately)
+# Median imputation (age_at_first_sex is NaN for girls who never had
+# sex; ever_had_sex already flags this separately). Test set uses
+# TRAIN medians to avoid leakage.
 X_train = X_train.fillna(X_train.median(numeric_only=True))
-X_test = X_test.fillna(X_train.median(numeric_only=True))  # use TRAIN medians on test, avoid leakage
+X_test = X_test.fillna(X_train.median(numeric_only=True))
 
-# Class imbalance: ~16% positive rate
 pos_rate = y_train.mean()
 scale_pos_weight = (1 - pos_rate) / pos_rate
 
@@ -67,7 +67,6 @@ results = []
 for name, model in models.items():
     print(f"\n=== {name} ===")
 
-    # 5-fold cross-validation on the training set
     cv_scores = cross_validate(model, X_train, y_train, cv=cv, scoring=scoring)
     print(
         f"CV  F1: {cv_scores['test_f1'].mean():.3f} | "
@@ -75,7 +74,6 @@ for name, model in models.items():
         f"ROC-AUC: {cv_scores['test_roc_auc'].mean():.3f}"
     )
 
-    # Fit on full training set, evaluate on held-out test set
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
@@ -110,3 +108,10 @@ results_df.to_csv(Path("outputs") / "model_comparison.csv", index=False)
 
 print("\n=== Model comparison (sorted by test PR-AUC) ===")
 print(results_df.to_string(index=False))
+
+# Save the exact feature matrices used for training/testing, so
+# explainability.py (Phase 4) can load them directly without
+# re-deriving features itself.
+X_train.to_csv("data/processed/X_train_features.csv", index=False)
+X_test.to_csv("data/processed/X_test_features.csv", index=False)
+print("\nSaved feature matrices to data/processed/X_train_features.csv and X_test_features.csv")
