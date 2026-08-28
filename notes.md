@@ -107,3 +107,55 @@ Performed deduplication (does not resolve core issue)
 - Results: EBM performed best on both ROC-AUC (0.958) and PR-AUC (0.789), consistent with the proposal's stated preference for interpretability-first models. XGBoost close behind (PR-AUC 0.763). Logistic regression's recall of 1.0 at default threshold is a class-balancing artifact, not a genuinely strong result.
 - Identified a methodological issue worth addressing before final write-up: ever_had_sex is one of the strongest predictors, but this is close to tautological (girls who have never had sex are almost definitionally in the "never pregnant" group), not a genuine risk insight. Plan to also report a model restricted to the sexually active subgroup, since that is the more policy-relevant question for county health officers.
 - Saved trained models to outputs/models/ (logistic_regression.joblib, random_forest.joblib, xgboost.joblib, ebm.joblib) and comparison table to outputs/model_comparison.csv.
+
+
+## 26/08/26 — Adopted thesis template; confirmed DSR Type A
+
+- Received the institution's thesis template (Chapters 3-7) and reviewed its structure. Confirmed this is a Design Science Research (DSR)
+  format: Chapter 3 (Methodology) is planning-level only, Chapter 4
+  (Artefact Design) holds model equations, Chapter 5 (Implementation)
+  covers training setup, Chapter 6 (Evaluation) reports results, and
+  Chapter 7 concludes.
+- Confirmed with supervisor input that this project is Type A (DSR
+  building an artefact), since it produces a decision-support framework
+  and dashboard, not just a trained model. This means Chapter 4 requires
+  numbered design requirements and Chapter 6 must evaluate the artefact
+  against them.
+- Noted that the existing Chapter 3 draft mixes in content that belongs
+  in Chapters 4-6 per this template (model equations, preliminary
+  results). Flagged for restructuring once further phases are complete,
+  rather than redoing immediately.
+
+## 28/08/26 — Phase 4 (part 1): explainability layer implemented
+
+- Implemented src/explainability.py: EBM native global and local
+  explanations (exact, not approximated, since EBM is additive by
+  construction), plus SHAP (TreeExplainer) on the XGBoost model as a
+  cross-check against a black-box model.
+- Global feature importance from both EBM and XGBoost/SHAP agreed
+  closely: ever_had_sex dominates by an order of magnitude over every
+  other feature in the full-sample model, confirming the concern raised
+  in the Methodology (Section 3.11.1).
+- Ran a Samburu vs Nyeri comparison of mean SHAP contribution per
+  feature. Found meaningful divergence: ever_had_sex has a stronger
+  protective effect in Nyeri than Samburu; wealth quintile, marital
+  status, and education also diverge between the two counties. Sample
+  sizes in this comparison are small (23 Samburu, 18 Nyeri in the test
+  split) - flagged to rerun against the full dataset rather than the
+  test split alone for a more stable estimate.
+- Saved figures to outputs/figures/ (ebm_global_importance.png,
+  xgboost_shap_summary.png) and the county comparison table to
+  outputs/samburu_nyeri_shap_comparison.csv.
+- Updated src/train_models.py to also save data/processed/
+  X_train_features.csv and X_test_features.csv, since explainability.py
+  depends on the exact feature matrices used in training. train_models.py
+  must now be run before explainability.py.
+
+## 28/08/26 — Phase 4 (part 2): sexually active subset model
+
+- Implemented src/train_subset_model.py: trained EBM and XGBoost on the subset of respondents who have ever had sex (1,671 train / 420 test), with ever_had_sex dropped as a feature since it is constant within this subset.
+- Pregnancy rate within this subset is 48.5%, much higher than the 15.8% full-sample rate, as expected once the non-sexually-active majority is removed.
+- With ever_had_sex no longer able to dominate, the EBM global importance ranking changed substantially: marital status (never married, married) ranked highest, followed by age at first sex, county, wealth quintile, and education. This is the result that directly answers the study's policy question, since these are the factors an intervention could plausibly target among girls already sexually active.
+- Model performance on this subset is lower than the full-sample model (EBM ROC-AUC 0.792 vs 0.958 full-sample), which is expected and correct: the task is genuinely harder without the near-tautological predictor, not evidence of a worse model.
+- Saved models to outputs/models/ (ebm_subset.joblib, xgboost_subset.joblib), results to outputs/subset_model_comparison.csv, and the feature importance table to outputs/subset_ebm_importance.csv.
+- Next: counterfactual policy simulation (e.g. effect of secondary school completion on predicted risk), using the subset model as the basis.
