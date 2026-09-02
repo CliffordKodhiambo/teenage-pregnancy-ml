@@ -1,0 +1,15 @@
+feature,mean_abs_shap
+marital_0,1.373983
+v024,0.84863913
+age_at_first_sex,0.73134655
+wealth_quintile,0.69995344
+education,0.3880036
+heard_fp_a,0.34414822
+urban,0.314436
+marital_1,0.26387185
+heard_fp_b,0.1183806
+heard_fp_c,0.08198182
+marital_2,0.03168759
+marital_5,0.028252862
+marital_4,0.028004637
+knows_modern_contraception,0.018189361

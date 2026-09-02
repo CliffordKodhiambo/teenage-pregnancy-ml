@@ -108,7 +108,7 @@ Performed deduplication (does not resolve core issue)
 - Identified a methodological issue worth addressing before final write-up: ever_had_sex is one of the strongest predictors, but this is close to tautological (girls who have never had sex are almost definitionally in the "never pregnant" group), not a genuine risk insight. Plan to also report a model restricted to the sexually active subgroup, since that is the more policy-relevant question for county health officers.
 - Saved trained models to outputs/models/ (logistic_regression.joblib, random_forest.joblib, xgboost.joblib, ebm.joblib) and comparison table to outputs/model_comparison.csv.
 
-
+md
 ## 26/08/26 — Adopted thesis template; confirmed DSR Type A
 
 - Received the institution's thesis template (Chapters 3-7) and reviewed its structure. Confirmed this is a Design Science Research (DSR)
@@ -159,3 +159,75 @@ Performed deduplication (does not resolve core issue)
 - Model performance on this subset is lower than the full-sample model (EBM ROC-AUC 0.792 vs 0.958 full-sample), which is expected and correct: the task is genuinely harder without the near-tautological predictor, not evidence of a worse model.
 - Saved models to outputs/models/ (ebm_subset.joblib, xgboost_subset.joblib), results to outputs/subset_model_comparison.csv, and the feature importance table to outputs/subset_ebm_importance.csv.
 - Next: counterfactual policy simulation (e.g. effect of secondary school completion on predicted risk), using the subset model as the basis.
+
+
+## 01/09/26 — Phase 4 (part 3): counterfactual policy simulation
+
+- Implemented src/counterfactual_simulation.py: used the ebm_subset
+  model to simulate raising every below-secondary respondent to
+  secondary-complete education, holding all other features fixed.
+  Compared predicted risk before and after, overall and by county.
+- Result: effect is small. Mean predicted risk among affected girls
+  dropped by about 1 percentage point nationally, 0.9 points in
+  Samburu. Nyeri's estimate (-2.8 points) is unreliable, based on only
+  1 below-secondary respondent in that subsample.
+- Interpretation: education alone appears to be a weak lever in this
+  model once wealth, marital status, and county are held constant,
+  consistent with the subset model's global importance ranking
+  (Section 3.11.1 / explainability work), where marital status and age
+  at first sex outranked education by a wide margin.
+- Limitation noted: this is a single-variable simulation and does not
+  account for correlation between education, wealth, and marital
+  status in reality (e.g. more education is often associated with
+  delayed marriage). Flagged as a caveat for the write-up rather than
+  presenting the result as a definitive policy conclusion.
+- Saved outputs/counterfactual_secondary_education.csv and
+  outputs/figures/counterfactual_secondary_education.png.
+- Considering a second counterfactual (delayed marriage / age at first
+  sex) to round out this section before write-up.
+
+## 02/09/26 — Phase 4 (part 4): second counterfactual, delayed marriage
+
+- Implemented src/counterfactual_marriage.py: used the ebm_subset model
+  to simulate currently married or cohabiting respondents becoming
+  never married, holding all other features fixed.
+- Result: substantially larger effect than the education counterfactual.
+  Affected girls' predicted risk dropped by 48 percentage points on
+  average nationally. Samburu specifically: 49 of 85 sexually active
+  respondents (58%) are currently married/cohabiting, and the whole-
+  county average predicted risk drops from 0.72 to 0.49 under this
+  simulation. Nyeri's estimate is unstable (only 2 affected
+  respondents), same caveat as the education counterfactual.
+- This result aligns with documented patterns in Kenyan adolescent
+  health literature linking early marriage/cohabitation to teenage
+  pregnancy, particularly in Samburu. Treated as a validating signal
+  that the model is picking up a real, known relationship rather than
+  a modelling artifact.
+- Comparison with the education counterfactual (small effect) is
+  itself a notable finding: marriage timing appears to be a stronger
+  lever than education access in this model, worth leading with in the
+  write-up.
+- Saved outputs/counterfactual_delayed_marriage.csv and
+  outputs/figures/counterfactual_delayed_marriage.png.
+- Limitation carried over: single-variable simulation, does not
+  account for correlation between marital status and age at first sex.
+
+  ## 02/09/26 — Closed explainability gaps: full-dataset county comparison and subset model explanations
+
+- Reran the Samburu vs Nyeri SHAP comparison on the full dataset
+  (114 Samburu, 76 Nyeri respondents) rather than the test split alone
+  (23/18). Findings held: marital status, wealth, education, and age
+  at first sex all diverge meaningfully between the two counties;
+  ever_had_sex remains far more negatively weighted in Nyeri.
+- Ran global SHAP and a Samburu/Nyeri comparison on the sexually active
+  subset model (xgboost_subset) for the first time. Global ranking
+  (marital status, county, age at first sex, wealth, education) closely
+  matches the EBM subset ranking from the earlier explainability work,
+  agreement across two independent, structurally different models,
+  treated as a validating signal.
+- Nyeri's subset county comparison remains based on only 13 respondents
+  and should continue to be flagged as unstable wherever it is cited.
+- Saved outputs/samburu_nyeri_shap_comparison_full.csv,
+  outputs/subset_xgboost_shap_importance.csv,
+  outputs/subset_samburu_nyeri_shap_comparison.csv, and
+  outputs/figures/subset_xgboost_shap_summary.png.
