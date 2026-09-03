@@ -65,7 +65,7 @@ Performed deduplication (does not resolve core issue)
 
 
 
-## 12/08/26 — Correct dataset obtained and validated
+## 12/08/26 - Correct dataset obtained and validated
 
 - Received the DHS document guide listing all available Kenya DHS-8
   recode files. Identified keir8cdt.zip (Individual Recode, Stata
@@ -86,13 +86,13 @@ Performed deduplication (does not resolve core issue)
 - Data issue fully resolved. Proceeding to Phase 1 (data preparation).
 
 
-## 17/08/26 — Phase 1 and Phase 2 completed
+## 17/08/26 - Phase 1 and Phase 2 completed
 
 - Implemented src/build_analysis_dataset.py: filters keir8cfl.dta to 6,404 girls aged 15-19, builds ever_pregnant target from V201/V213/V228, recodes V525 special codes (0 = never had sex, 49 = inconsistent response) into a separate ever_had_sex flag plus clean numeric age, narrows to ~18 relevant columns. Output: data/processed/analysis_dataset.csv.
 - Implemented src/feature_engineering.py: encodes analysis_dataset.csv into model-ready features - ordinal education/wealth, binary urban/ rural, one-hot marital status, 3-level media exposure category (No/Yes/Not administered), binary contraceptive knowledge flag. Produces stratified 80/20 train/test split. Output: data/processed/train.csv, data/processed/test.csv.
 - Media exposure variables (V384a/b/c) confirmed ~48% missing, consistent with a DHS half-sample question design rather than a data quality issue - treated as a distinct "Not administered" category rather than imputed or dropped.
 
-## 17/08/26 — Clarified relationship between dataset files
+## 17/08/26 - Clarified relationship between dataset files
 
 - Documented how each processed file relates to the original source (keir8cfl.dta, 32,156 women, 5,925 columns):
   - build_analysis_dataset.py -> analysis_dataset.csv: cleaned but not yet encoded for modelling.
@@ -100,7 +100,7 @@ Performed deduplication (does not resolve core issue)
   - generate_demo_workbook.py -> presentation/Raw_and_Cleaned_Full_Dataset.xlsx: a separate, standalone for oral presentation purposes only, not part of the pipeline. Re-applies the same cleaning logic manually against keir8cfl.dta directly. Must be re-run manually if the pipeline scripts' cleaning logic changes.
 - Added src/generate_demo_workbook.py to the repo.
 
-## 17/08/26 — Phase 3 completed: model training and comparison
+## 17/08/26 - Phase 3 completed: model training and comparison
 
 - Implemented src/train_models.py: trained logistic regression, random forest, XGBoost, and an Explainable Boosting Machine on train.csv, with 5-fold stratified cross-validation and class imbalance handled via class weighting (sklearn models) / scale_pos_weight (XGBoost).
 - Evaluated all four on the held-out test.csv using F1, precision, recall, ROC-AUC, and PR-AUC (PR-AUC prioritized over ROC-AUC given the imbalanced target, ~15.8% positive rate).
@@ -109,7 +109,7 @@ Performed deduplication (does not resolve core issue)
 - Saved trained models to outputs/models/ (logistic_regression.joblib, random_forest.joblib, xgboost.joblib, ebm.joblib) and comparison table to outputs/model_comparison.csv.
 
 md
-## 26/08/26 — Adopted thesis template; confirmed DSR Type A
+## 26/08/26 - Adopted thesis template; confirmed DSR Type A
 
 - Received the institution's thesis template (Chapters 3-7) and reviewed its structure. Confirmed this is a Design Science Research (DSR)
   format: Chapter 3 (Methodology) is planning-level only, Chapter 4
@@ -126,7 +126,7 @@ md
   results). Flagged for restructuring once further phases are complete,
   rather than redoing immediately.
 
-## 28/08/26 — Phase 4 (part 1): explainability layer implemented
+## 28/08/26 - Phase 4 (part 1): explainability layer implemented
 
 - Implemented src/explainability.py: EBM native global and local
   explanations (exact, not approximated, since EBM is additive by
@@ -151,7 +151,7 @@ md
   depends on the exact feature matrices used in training. train_models.py
   must now be run before explainability.py.
 
-## 28/08/26 — Phase 4 (part 2): sexually active subset model
+## 28/08/26 - Phase 4 (part 2): sexually active subset model
 
 - Implemented src/train_subset_model.py: trained EBM and XGBoost on the subset of respondents who have ever had sex (1,671 train / 420 test), with ever_had_sex dropped as a feature since it is constant within this subset.
 - Pregnancy rate within this subset is 48.5%, much higher than the 15.8% full-sample rate, as expected once the non-sexually-active majority is removed.
@@ -161,7 +161,7 @@ md
 - Next: counterfactual policy simulation (e.g. effect of secondary school completion on predicted risk), using the subset model as the basis.
 
 
-## 01/09/26 — Phase 4 (part 3): counterfactual policy simulation
+## 01/09/26 - Phase 4 (part 3): counterfactual policy simulation
 
 - Implemented src/counterfactual_simulation.py: used the ebm_subset
   model to simulate raising every below-secondary respondent to
@@ -186,7 +186,7 @@ md
 - Considering a second counterfactual (delayed marriage / age at first
   sex) to round out this section before write-up.
 
-## 02/09/26 — Phase 4 (part 4): second counterfactual, delayed marriage
+## 02/09/26 - Phase 4 (part 4): second counterfactual, delayed marriage
 
 - Implemented src/counterfactual_marriage.py: used the ebm_subset model
   to simulate currently married or cohabiting respondents becoming
@@ -212,7 +212,7 @@ md
 - Limitation carried over: single-variable simulation, does not
   account for correlation between marital status and age at first sex.
 
-  ## 02/09/26 — Closed explainability gaps: full-dataset county comparison and subset model explanations
+  ## 02/09/26 - Closed explainability gaps: full-dataset county comparison and subset model explanations
 
 - Reran the Samburu vs Nyeri SHAP comparison on the full dataset
   (114 Samburu, 76 Nyeri respondents) rather than the test split alone
@@ -231,3 +231,35 @@ md
   outputs/subset_xgboost_shap_importance.csv,
   outputs/subset_samburu_nyeri_shap_comparison.csv, and
   outputs/figures/subset_xgboost_shap_summary.png.
+
+  ## 03/09/26 - Equity assessment completed
+
+- Implemented src/equity_assessment.py: checked full-sample model
+  precision, recall, and F1 across wealth quintile, urban/rural, and
+  education subgroups on the test set.
+- Found a real equity concern worth reporting rather than glossing
+  over: recall is markedly worse for wealthier and more educated
+  subgroups. Higher-education girls: recall 0.33 (n=25, small sample,
+  caveat noted). Richest wealth quintile: recall 0.50, versus 0.82-0.96
+  for poorer, less-educated subgroups.
+- Likely explanation: pregnancy is rarer among wealthier/more-educated
+  girls, giving the model fewer positive examples to learn from in
+  that subgroup. Practical implication: the tool would miss more
+  actually-at-risk girls if applied to a wealthier population than a
+  poorer one. Recorded as a limitation for the write-up, not omitted.
+- Saved outputs/equity_assessment.csv.
+
+## 03/09/26 - County-level risk ranking completed
+
+- Implemented src/county_risk_ranking.py: applied the full-sample model
+  to all 47 counties represented in the data, ranking by mean predicted
+  pregnancy risk.
+- Samburu ranked #1 (highest predicted risk) and Nyeri ranked #47
+  (lowest) out of all 47 counties, directly validating the proposal's
+  original choice of these two counties as extreme contrast cases.
+- Every county has at least 70 adolescent respondents, so unlike some
+  earlier subgroup comparisons, no county in this ranking rests on an
+  unstable sample size.
+- Saved outputs/county_risk_ranking.csv.
+- Partial dependence analysis (src/partial_dependence.py) was also
+  completed but is still being held back from GitHub for now.
