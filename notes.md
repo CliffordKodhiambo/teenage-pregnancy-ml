@@ -261,5 +261,3 @@ md
   earlier subgroup comparisons, no county in this ranking rests on an
   unstable sample size.
 - Saved outputs/county_risk_ranking.csv.
-- Partial dependence analysis (src/partial_dependence.py) was also
-  completed but is still being held back from GitHub for now.
