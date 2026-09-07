@@ -261,3 +261,32 @@ md
   earlier subgroup comparisons, no county in this ranking rests on an
   unstable sample size.
 - Saved outputs/county_risk_ranking.csv.
+
+## 07/09/26 - County Adolescent Pregnancy Risk Intelligence Dashboard built
+
+- Implemented dashboard/app.py: a 4-tab Streamlit prototype dashboard.
+  - County Risk Ranking: sortable table and bar chart of all 47 counties
+  - County Deep-Dive: live SHAP explanation for any selected county,
+    computed on the fly (not just precomputed for Samburu/Nyeri)
+  - Equity Assessment: subgroup performance table and recall/precision
+    comparison, from the earlier equity assessment work
+  - Policy Simulator: interactive what-if profile builder (education,
+    wealth, marital status, age at first sex, county, residence) using
+    the sexually active subset model, with an explicit caption noting
+    predictions reflect association, not individual causation
+- Verified the app's data loading and prediction logic runs correctly
+  against the real trained models and processed data before handing
+  it over.
+- Fixed a rank-calculation bug in the County Deep-Dive tab (was using
+  a fragile index lookup; replaced with an explicit rank column
+  computed from the sorted county ranking).
+- Corrected a launch issue: the app must be started with
+  `streamlit run dashboard/app.py`, not `python dashboard/app.py` -
+  running it directly puts Streamlit in "bare mode" and produces
+  ScriptRunContext warnings without rendering anything. Also removed a
+  stray duplicate copy that had been placed at src/dashboard.py.
+- Replaced deprecated `use_container_width=True` calls with
+  `width='stretch'` to remove console warnings during live use.
+- Added streamlit to requirements.txt.
+- This completes the dashboard item from the original project scope.
+  Only final validation and reporting (the write-up) remains.
